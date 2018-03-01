@@ -1,44 +1,47 @@
-" Internal: Creates a new neoterm buffer.
+" Creates a new neoterm
+" Arguments:
+" optional dictionary with the following keys:
+"     * handlers - dictionary with custom handlers for the terminal, keys:
+"       * on_stdout
+"       * on_stderr
+"       * on_exit
+"     * source - Indicates if a new neoterm is being created by `:Tnew` or
+"     not, if it's being created by `:Tnew`, source must be `tnew`.
 function! neoterm#new(...)
-  let l:handlers = len(a:000) ? a:1 : {}
-  call neoterm#window#create(l:handlers, '')
+  call neoterm#window#create(get(a:, 1, {}))
 endfunction
 
-function! neoterm#tnew()
-  call neoterm#window#create({}, 'tnew')
-endfunction
-
-function! neoterm#toggle()
-  call s:toggle(g:neoterm.last())
+function! neoterm#toggle(mod)
+  call s:toggle({ 'instance': g:neoterm.last(), 'mod': a:mod })
 endfunction
 
 function! neoterm#toggleAll()
   for l:instance in values(g:neoterm.instances)
-    call s:toggle(l:instance)
+    call s:toggle({ 'instance': l:instance })
   endfor
 endfunction
 
-function! s:toggle(instance)
+function! s:toggle(opts)
+  let l:opts = extend(a:opts, { 'mod': '' }, 'keep')
   if g:neoterm.has_any()
-    let a:instance.origin = exists('*win_getid') ? win_getid() : 0
+    let l:opts.instance.origin = exists('*win_getid') ? win_getid() : 0
 
     if neoterm#tab_has_neoterm()
-      call a:instance.close()
+      call l:opts.instance.close()
     else
-      call a:instance.open()
+      call l:opts.instance.open({ 'mod': l:opts.mod })
     end
   else
-    call neoterm#new()
+    call neoterm#new({ 'mod': l:opts.mod })
   end
 endfunction
 
-" Internal: Creates a new neoterm buffer, or opens if it already exists.
-function! neoterm#open()
+function! neoterm#open(opts)
   if !neoterm#tab_has_neoterm()
     if !g:neoterm.has_any()
-      call neoterm#new()
+      call neoterm#new(a:opts)
     else
-      call g:neoterm.last().open()
+      call g:neoterm.last().open(a:opts)
     end
   end
 endfunction
@@ -63,21 +66,17 @@ function! neoterm#closeAll(...)
   endfor
 endfunction
 
-" Public: Executes a command on terminal.
-" Evaluates any "%" inside the command to the full path of the current file.
-function! neoterm#do(command)
-  let l:command = neoterm#expand_cmd(a:command)
-  call neoterm#exec([l:command, g:neoterm_eof])
+function! neoterm#do(opts)
+  let l:cmd = [neoterm#expand_cmd(a:opts.cmd), g:neoterm_eof]
+  call neoterm#exec({'cmd': l:cmd, 'mod': a:opts.mod})
 endfunction
 
-" Internal: Loads a terminal, if it is not loaded, and execute a list of
-" commands.
-function! neoterm#exec(command)
+function! neoterm#exec(opts)
   if !g:neoterm.has_any() || g:neoterm_open_in_all_tabs
-    call neoterm#open()
+    call neoterm#open({ 'mod': a:opts.mod })
   end
 
-  call g:neoterm.last().exec(a:command)
+  call g:neoterm.last().exec(a:opts.cmd)
 endfunction
 
 function! neoterm#map_for(command)
@@ -86,7 +85,6 @@ function! neoterm#map_for(command)
         \ ' :T ' . neoterm#expand_cmd(a:command) . '<cr>'
 endfunction
 
-" Internal: Expands "%" in commands to current file full path.
 function! neoterm#expand_cmd(command)
   let l:command = substitute(a:command, '%\(:[phtre]\)\+', '\=expand(submatch(0))', 'g')
 
@@ -99,9 +97,6 @@ function! neoterm#expand_cmd(command)
   return substitute(l:command, '%', l:path, 'g')
 endfunction
 
-" Internal: Open a new split with the current neoterm buffer if there is one.
-"
-" Returns: 1 if a neoterm split is opened, 0 otherwise.
 function! neoterm#tab_has_neoterm()
   if g:neoterm.has_any()
     let l:buffer_id = g:neoterm.last().buffer_id
@@ -109,7 +104,6 @@ function! neoterm#tab_has_neoterm()
   end
 endfunction
 
-" Internal: Clear the current neoterm buffer. (Send a <C-l>)
 function! neoterm#clear()
   silent call g:neoterm.last().clear()
 endfunction
@@ -124,7 +118,6 @@ function! neoterm#vim_exec(cmd)
   silent call g:neoterm.last().vim_exec(a:cmd)
 endfunction
 
-" Internal: Kill current process on neoterm. (Send a <C-c>)
 function! neoterm#kill()
   silent call g:neoterm.last().kill()
 endfunction

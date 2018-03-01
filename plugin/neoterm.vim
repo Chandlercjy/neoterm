@@ -107,13 +107,13 @@ if !exists('g:neoterm_auto_repl_cmd')
   let g:neoterm_auto_repl_cmd = 1
 end
 
-command! -bar -complete=shellcmd Tnew silent call neoterm#tnew()
-command! -bar Topen silent call neoterm#open()
+command! -bar Tnew call neoterm#new({ 'source': 'tnew', 'mod': <q-mods> })
+command! -bar Topen call neoterm#open({ 'mod': <q-mods> })
 command! -bang -bar Tclose silent call neoterm#close(<bang>0)
 command! -bang -bar TcloseAll silent call neoterm#closeAll(<bang>0)
-command! -bar Ttoggle silent call neoterm#toggle()
+command! -bar Ttoggle silent call neoterm#toggle(<q-mods>)
 command! -bar TtoggleAll silent call neoterm#toggleAll()
-command! -complete=shellcmd -nargs=+ T silent call neoterm#do(<q-args>)
+command! -complete=shellcmd -nargs=+ T call neoterm#do({ 'cmd': <q-args>, 'mod': <q-mods> })
 command! -complete=shellcmd -nargs=+ Tmap silent call neoterm#map_for(<q-args>)
 command! -nargs=1 Tpos let g:neoterm_position=<q-args>
 

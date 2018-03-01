@@ -42,29 +42,30 @@ executed in the last neoterm's term.
 ===============================================================================
 2. Commands					 *neoterm-cmds* *neoterm-commands*
 
-:T <command>								    *:T*
+:T {command}								    *:T*
 
 Executes the given command on a neoterm terminal split. If there is a `%` in
-the given command, this will be expanded to the current file path.
+the given command, this will be expanded to the current file path. This
+command accepts |mods|.
 
-:Tnew									 *:Tnew*
+:Tnew	        							 *:Tnew*
 
-Opens a new term buffer.
+Opens a new term buffer, this command accepts |mods|.
 
-:Tmap <command>								 *:Tmap*
+:Tmap {command}								 *:Tmap*
 
 Maps the given command, everytime that the mapping is executed the command is
 sent to a neoterm terminal buffer.
 
 The default mapping is `,tt`, it can be changed in |g:neoterm_automap_keys|
 
-:Tpos <position>							 *:Tpos*
+:Tpos {position}							 *:Tpos*
 
 Changes the position where the neoterm terminal buffer will be opened. Values
 accepted: `horizontal` and `vertical`. The default position is `horizontal`,
 but it can be changed in |g:neoterm_position|
 
-:TREPLSetTerm <term-id>						 *:TREPLSetTerm*
+:TREPLSetTerm {term-id}						 *:TREPLSetTerm*
 
 Chooses, or changes, the current term to run the REPL commands.
 
@@ -82,7 +83,8 @@ Sends the current selection to a REPL.
 
 :Topen									*:Topen*
 
-Opens a new, or the current, neoterm terminal split.
+Opens a new, or the current, neoterm terminal split. This command accepts
+|mods|.
 
 :Tclose[!]							       *:Tclose*
 
@@ -101,7 +103,7 @@ When the [!] is included `:Tclose!`(with the bang) is called.
 
 :Ttoggle							      *:Ttoggle*
 
-Toggles the last window in the current tab.
+Toggles the last window in the current tab. This command accepts |mods|.
 
 :TtoggleAll     						   *:TtoggleAll*
 
@@ -123,13 +125,13 @@ Navigate to the previous neoterm instance, works like `:bprevious`
 Closes, or hides, the current neoterm terminal split according to
 |g:neoterm_keep_term_open|.
 
-:call neoterm#do(<command>)					  *neoterm#do()*
+:call neoterm#do({command})					  *neoterm#do()*
 
 Executes the given command on a neoterm terminal split. If there is a `%` in
 the given command, this will be expanded to the current file path.
 The command |:T| executes this function.
 
-:call neoterm#exec([<command>, ""])				*neoterm#exec()*
+:call neoterm#exec([{command}, ""])				*neoterm#exec()*
 
 Executes the given command list on a neoterm terminal split. The argument
 follows the same pattern that |jobsend()| second argument.

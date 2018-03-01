@@ -1,35 +1,53 @@
-function! neoterm#window#create(handlers, source)
+let s:default_opts = {
+      \ 'handlers': {},
+      \ 'source': '',
+      \ 'buffer_Id': -1,
+      \ 'mod': ''
+      \ }
+
+function! neoterm#window#create(opts)
   let l:origin = exists('*win_getid') ? win_getid() : 0
+  let l:opts = extend(a:opts, s:default_opts, 'keep')
 
   if !has_key(g:neoterm, 'term')
-    exec 'source ' . globpath(&runtimepath, 'autoload/neoterm.term.vim')
+    call neoterm#term#load()
   end
 
-  if g:neoterm_split_on_tnew || a:source !=# 'tnew'
-    call s:new_split()
+  if g:neoterm_split_on_tnew || l:opts.source !=# 'tnew'
+    let l:hidden=&hidden
+    let &hidden=0
+
+    call s:split_cmd(l:opts)
+
+    let &hidden=l:hidden
   end
 
-  call s:term_creator(a:handlers, l:origin)
+  call g:neoterm.term.new({ 'handlers': l:opts.handlers, 'origin': l:origin })
   call s:after_open(l:origin)
 endfunction
 
-function! s:new_split(...)
-  let l:hidden=&hidden
-  let &hidden=0
-  let l:cmd = printf('botright%s ', g:neoterm_size)
-  let l:cmd .= g:neoterm_position ==# 'horizontal' ? 'new' : 'vnew'
+function! s:split_cmd(opts)
+  let l:opts = extend(a:opts, s:default_opts, 'keep')
+  let l:splitmod = get(a:opts, 'mod',
+        \ g:neoterm_position ==# 'horizontal' ? 'botright' : 'vertical')
+  let l:mod = get(a:opts, 'mod', '')
 
-  exec a:0 ? printf('%s +buffer%s', l:cmd, a:1) : l:cmd
-  let &hidden=l:hidden
+  " Always split when it is not using :Tnew
+  if l:opts.source !=# 'tnew'
+    let l:cmd = printf('%s %snew', l:splitmod, g:neoterm_size)
+    if l:opts.buffer_id > 0
+      exec printf('%s +buffer%s', l:cmd, l:opts.buffer_id)
+    else
+      exec l:cmd
+    end
+  elseif l:mod !=# ''
+    exec printf('%s new', l:mod)
+  end
 endfunction
 
-function! s:term_creator(handlers, origin)
-  let b:neoterm_id = g:neoterm.term.new(a:origin, a:handlers).id
-endfunction
-
-function! neoterm#window#reopen(instance)
-  call s:new_split(a:instance.buffer_id)
-  call s:after_open(a:instance.origin)
+function! neoterm#window#reopen(opts)
+  call s:split_cmd(extend(a:opts, { 'buffer_id': a:opts.instance.buffer_id }))
+  call s:after_open(a:opts.instance.origin)
 endfunction
 
 function! s:after_open(origin)
